@@ -1,0 +1,16 @@
+[2013-12-05 19:49:49] WeeChat 0.4.3-dev (git: v0.4.2-126-gdfa3e13) (compiled on Dec  5 2013 14:05:52)
+[2013-12-05 19:49:49] Reading configuration file sec.conf
+[2013-12-05 19:49:49] Reading configuration file weechat.conf
+[2013-12-05 19:49:49] Limit for resource "core" has been set to unlimited
+[2013-12-05 19:49:49] Reading configuration file plugins.conf
+[2013-12-05 19:49:49] Reading configuration file alias.conf
+[2013-12-05 19:49:49] Reading configuration file aspell.conf
+[2013-12-05 19:49:49] Reading configuration file charset.conf
+[2013-12-05 19:49:49] Reading configuration file irc.conf
+[2013-12-05 19:49:49] Reading configuration file logger.conf
+[2013-12-05 19:49:49] Reading configuration file buffers.conf
+[2013-12-05 19:49:49] Reading configuration file iset.conf
+[2013-12-05 19:49:49] Reading configuration file relay.conf
+[2013-12-05 19:49:49] Reading configuration file rmodifier.conf
+[2013-12-05 19:49:49] Reading configuration file script.conf
+[2013-12-05 19:49:49] Reading configuration file xfer.conf
