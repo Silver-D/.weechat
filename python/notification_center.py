@@ -3,15 +3,13 @@
 # Author: Sindre Sorhus <sindresorhus@gmail.com>
 # License: MIT
 
-# Modified with option to show/hide notification message
-
 import weechat
 from pync import Notifier
 
 
 SCRIPT_NAME = 'notification_center'
 SCRIPT_AUTHOR = 'Sindre Sorhus <sindresorhus@gmail.com>'
-SCRIPT_VERSION = '0.2'
+SCRIPT_VERSION = '0.2.0'
 SCRIPT_LICENSE = 'MIT'
 SCRIPT_DESC = 'Pass highlights and private messages to the OS X 10.8+ Notification Center'
 
@@ -33,12 +31,12 @@ def notify(data, buffer, date, tags, displayed, highlight, prefix, message):
 	if weechat.config_get_plugin('show_highlights') == 'on' and highlight == '1':
 		channel = weechat.buffer_get_string(buffer, 'localvar_channel')
 		if weechat.config_get_plugin('show_message_text') == 'on':
-		    Notifier.notify(message, title='%s %s' % (prefix, channel))
+			Notifier.notify(message, title='%s %s' % (prefix, channel))
 		else:
-		    Notifier.notify('In %s by %s' % (channel, prefix), title='Highlighted Message')
+			Notifier.notify('In %s by %s' % (channel, prefix), title='Highlighted Message')
 	elif weechat.config_get_plugin('show_private_message') == 'on' and 'notify_private' in tags:
-            if weechat.config_get_plugin('show_message_text') == 'on':
-                Notifier.notify(message, title='%s [private]' % prefix)
-            else:
-                Notifier.notify('From %s' % prefix, title='Private Message')
+		if weechat.config_get_plugin('show_message_text') == 'on':
+			Notifier.notify(message, title='%s [private]' % prefix)
+		else:
+			Notifier.notify('From %s' % prefix, title='Private Message')
 	return weechat.WEECHAT_RC_OK
