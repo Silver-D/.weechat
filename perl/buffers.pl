@@ -19,17 +19,23 @@
 # Display sidebar with list of buffers.
 #
 # History:
-# 2013-11-07, nils_2@freenode.#weechat:
-#    v4.2: add options "prefix_bufname" and "suffix_bufname (idea by silverd)
+#
+# 2013-12-11, Sebastien Helleu <flashcode@flashtux.org>:
+#     v4.4: fix buffer number on drag to the end of list when option
+#           weechat.look.buffer_auto_renumber is off
+# 2013-12-10, nils_2@freenode.#weechat:
+#     v4.3: add options "prefix_bufname" and "suffix_bufname (idea by silverd)
+#         : fix hook_timer() for show_lag wasn't disabled
+#         : improved signal handling (less updating of buffers list)
 # 2013-11-07, Sebastien Helleu <flashcode@flashtux.org>:
-#    v4.2: use default filling "columns_vertical" when bar position is top/bottom
+#     v4.2: use default filling "columns_vertical" when bar position is top/bottom
 # 2013-10-31, nils_2@freenode.#weechat:
-#    v4.1: add option "detach_buffer_immediately" (idea by farn)
+#     v4.1: add option "detach_buffer_immediately" (idea by farn)
 # 2013-10-20, nils_2@freenode.#weechat:
-#    v4.0: add options "detach_displayed_buffers", "detach_display_window_number"
+#     v4.0: add options "detach_displayed_buffers", "detach_display_window_number"
 # 2013-09-27, nils_2@freenode.#weechat:
-#    v3.9: add option "toggle_bar" and option "show_prefix_query" (idea by IvarB)
-#        : fix problem with linefeed at end of list of buffers (reported by grawity)
+#     v3.9: add option "toggle_bar" and option "show_prefix_query" (idea by IvarB)
+#         : fix problem with linefeed at end of list of buffers (reported by grawity)
 # 2012-10-18, nils_2@freenode.#weechat:
 #     v3.8: add option "mark_inactive", to mark buffers you are not in (idea by xrdodrx)
 #         : add wildcard "*" for immune_detach_buffers (idea by StarWeaver)
@@ -145,7 +151,7 @@ use strict;
 use Encode qw( decode encode );
 # -------------------------------[ internal ]-------------------------------------
 my $SCRIPT_NAME = "buffers";
-my $SCRIPT_VERSION = "4.3";
+my $SCRIPT_VERSION = "4.4";
 
 my $BUFFERS_CONFIG_FILE_NAME = "buffers";
 my $buffers_config_file;
@@ -181,9 +187,16 @@ if ( check_bar_item() == 0 )
     weechat::command("","/bar show " . $SCRIPT_NAME) if ( weechat::config_boolean($options{"toggle_bar"}) eq 1 );
 }
 
-weechat::hook_signal("buffer_*", "buffers_signal_buffer", "");
+weechat::hook_signal("buffer_opened", "buffers_signal_buffer", "");
+weechat::hook_signal("buffer_closed", "buffers_signal_buffer", "");
+weechat::hook_signal("buffer_merged", "buffers_signal_buffer", "");
+weechat::hook_signal("buffer_unmerged", "buffers_signal_buffer", "");
+weechat::hook_signal("buffer_moved", "buffers_signal_buffer", "");
+weechat::hook_signal("buffer_renamed", "buffers_signal_buffer", "");
+weechat::hook_signal("buffer_switch", "buffers_signal_buffer", "");
+
 weechat::hook_signal("window_switch", "buffers_signal_buffer", "");
-weechat::hook_signal("hotlist_*", "buffers_signal_hotlist", "");
+weechat::hook_signal("hotlist_changed", "buffers_signal_hotlist", "");
 #weechat::hook_command_run("/input switch_active_*", "buffers_signal_buffer", "");
 weechat::bar_item_update($SCRIPT_NAME);
 
@@ -225,7 +238,7 @@ weechat::hook_command(  $cmd_buffers_detach,
 if ($weechat_version >= 0x00030800)
 {
     weechat::hook_config("buffers.look.detach", "hook_timer_detach", "");
-    $Hooks{timer_detach} = weechat::hook_timer( weechat::config_integer( $options{"detach"}) * 1000, 60, 0, "buffers_signal_buffer", "") if ( weechat::config_integer( $options{"detach"}) > 0 );
+    $Hooks{timer_detach} = weechat::hook_timer( weechat::config_integer( $options{"detach"}) * 1000, 60, 0, "buffers_signal_hotlist", "") if ( weechat::config_integer( $options{"detach"}) > 0 );
 }
 
     weechat::hook_config("buffers.look.show_lag", "hook_timer_lag", "");
@@ -335,7 +348,7 @@ sub hook_timer_detach
     else
     {
         weechat::unhook($Hooks{timer_detach}) if $Hooks{timer_detach};
-        $Hooks{timer_detach} = weechat::hook_timer( weechat::config_integer( $options{"detach"}) * 1000, 60, 0, "buffers_signal_buffer", "");
+        $Hooks{timer_detach} = weechat::hook_timer( weechat::config_integer( $options{"detach"}) * 1000, 60, 0, "buffers_signal_hotlist", "");
     }
     weechat::bar_item_update($SCRIPT_NAME);
     return weechat::WEECHAT_RC_OK;
@@ -344,7 +357,7 @@ sub hook_timer_detach
 sub hook_timer_lag
 {
     my $lag = $_[2];
-    if ( $lag eq 0 )
+    if ( $lag eq "off" )
     {
         weechat::unhook($Hooks{timer_lag}) if $Hooks{timer_lag};
         $Hooks{timer_lag} = "";
@@ -410,6 +423,8 @@ my %default_options_color =
  "queries_message_bg" => ["queries_message_bg", "color", "background color for query buffer with unread message", "", 0, 0,"default", "default", 0, "", "","buffers_signal_config", "", "", ""],
  "queries_highlight_fg" => ["queries_highlight_fg", "color", "foreground color for query buffer with unread highlight", "", 0, 0,"default", "default", 0, "", "","buffers_signal_config", "", "", ""],
  "queries_highlight_bg" => ["queries_highlight_bg", "color", "background color for query buffer with unread highlight", "", 0, 0,"default", "default", 0, "", "","buffers_signal_config", "", "", ""],
+ "color_prefix_bufname" => ["prefix_bufname", "color", "color for prefix of buffer name", "", 0, 0,"default", "default", 0, "", "","buffers_signal_config", "", "", ""],
+ "color_suffix_bufname" => ["suffix_bufname", "color", "color for suffix of buffer name", "", 0, 0,"default", "default", 0, "", "","buffers_signal_config", "", "", ""],
 );
 
 my %default_options_look =
@@ -423,11 +438,8 @@ my %default_options_look =
  "short_names"          =>      ["short_names", "boolean", "display short names (remove text before first \".\" in buffer name)", "", 0, 0,"on", "on", 0, "", "", "buffers_signal_config", "", "", ""],
  "show_number"          =>      ["show_number", "boolean", "display channel number in front of buffername", "", 0, 0,"on", "on", 0, "", "", "buffers_signal_config", "", "", ""],
  "show_number_char"     =>      ["number_char", "string", "display a char behind channel number", "", 0, 0,".", ".", 0, "", "", "buffers_signal_config", "", "", ""],
- 
- "show_prefix_bufname"  =>      ["prefix_bufname", "string", 'prefix displayed in front of buffername (note: content is evaluated, so you can use colors with format "${color:xxx}", see /help eval)', "", 0, 0,"", "", 0, "", "", "buffers_signal_config", "", "", ""],
- "show_suffix_bufname"  =>      ["suffix_bufname", "string", 'suffix displayed at end of buffername (note: content is evaluated, so you can use colors with format "${color:xxx}", see /help eval)', "", 0, 0,"", "", 0, "", "", "buffers_signal_config", "", "", ""],
- 
- 
+ "show_prefix_bufname"  =>      ["prefix_bufname", "string", "prefix displayed in front of buffername", "", 0, 0,"", "", 0, "", "", "buffers_signal_config", "", "", ""],
+ "show_suffix_bufname"  =>      ["suffix_bufname", "string", "suffix displayed at end of buffername", "", 0, 0,"", "", 0, "", "", "buffers_signal_config", "", "", ""],
  "show_prefix"          =>      ["prefix", "boolean", "displays your prefix for channel in front of buffername", "", 0, 0,"off", "off", 0, "", "", "buffers_signal_config", "", "", ""],
  "show_prefix_empty"    =>      ["prefix_empty", "boolean", "use a placeholder for channels without prefix", "", 0, 0,"on", "on", 0, "", "",  "buffers_signal_config", "", "", ""],
  "show_prefix_query"  =>        ["prefix_for_query", "string", "prefix displayed in front of query buffer", "", 0, 0,"", "", 0, "", "", "buffers_signal_config", "", "", ""],
@@ -436,7 +448,7 @@ my %default_options_look =
  "jump_prev_next_visited_buffer" => ["jump_prev_next_visited_buffer", "boolean", "jump to previously or next visited buffer if you click with left/right mouse button on currently visiting buffer", "", 0, 0,"off", "off", 0, "", "", "buffers_signal_config", "", "", ""],
  "name_size_max"        =>      ["name_size_max","integer","maximum size of buffer name. 0 means no limitation","",0,256,0,0,0, "", "", "buffers_signal_config", "", "", ""],
  "name_crop_suffix"     =>      ["name_crop_suffix","string","contains an optional char(s) that is appended when buffer name is shortened","",0,0,"+","+",0,"","","buffers_signal_config", "", "", ""],
- "detach"               =>      ["detach", "integer","detach channel from buffers list after a specific period of time (in seconds) without action (weechat â‰¥ 0.3.8 required) (0 means \"off\")", "", 0, 31536000,0, "number", 0, "", "", "buffers_signal_config", "", "", ""],
+ "detach"               =>      ["detach", "integer","detach channel from buffers list after a specific period of time (in seconds) without action (weechat ≥ 0.3.8 required) (0 means \"off\")", "", 0, 31536000,0, "number", 0, "", "", "buffers_signal_config", "", "", ""],
  "immune_detach_buffers"=>      ["immune_detach_buffers", "string", "comma separated list of buffers to NOT automatically detatch. Allows \"*\" wildcard. Ex: \"BitlBee,freenode.*\"", "", 0, 0,"", "", 0, "", "", "buffers_signal_config_immune_detach_buffers", "", "", ""],
  "detach_query"         =>      ["detach_query", "boolean", "query buffer will be detachted", "", 0, 0,"off", "off", 0, "", "", "buffers_signal_config", "", "", ""],
  "detach_buffer_immediately" => ["detach_buffer_immediately", "string", "comma separated list of buffers to detach immediately. A query and highlight message will attach buffer again. Allows \"*\" wildcard. Ex: \"BitlBee,freenode.*\"", "", 0, 0,"", "", 0, "", "", "buffers_signal_config_detach_buffer_immediately", "", "", ""],
@@ -847,29 +859,13 @@ sub build_buffers
 
         # create channel number for output
         if ( weechat::config_string( $options{"show_prefix_bufname"} ) ne "" )
-        {   
-            if ($buffer->{"current_buffer"})
-            {
-              #  $str .= weechat::color( "cyan" );
-            }
-            else
-            {
-              #  $str .= weechat::color( "cyan" );
-            }
-            
-            $str .= $color_bg;
-            
-            if ($weechat_version >= 0x00040200)
-            {
-                $str .= weechat::string_eval_expression(weechat::config_string( $options{"show_prefix_bufname"} ), {}, {},{});
-            }
-            else
-            {
-                $str .= weechat::config_string( $options{"show_prefix_bufname"} );
-            }
-            
-            $str .= weechat::color("default").$color_bg;
+        {
+            $str .= $color_bg .
+                    weechat::color( weechat::config_color( $options{"color_prefix_bufname"} ) ).
+                    weechat::config_string( $options{"show_prefix_bufname"} ).
+                    weechat::color("default");
         }
+
         if ( weechat::config_boolean( $options{"show_number"} ) eq 1 )   # on
         {
             if (( weechat::config_boolean( $options{"indenting_number"} ) eq 1)
@@ -1027,26 +1023,11 @@ sub build_buffers
 
         if ( weechat::config_string( $options{"show_suffix_bufname"} ) ne "" )
         {
-            if ($buffer->{"current_buffer"})
-            {
-              #  $str .= weechat::color( "cyan" );
-            }
-            else
-            {
-              #  $str .= weechat::color( "cyan" );
-            }
-            
-            $str .= $color_bg;
-            
-            if ($weechat_version >= 0x00040200)
-            {
-                $str .= weechat::string_eval_expression(weechat::config_string( $options{"show_suffix_bufname"} ), {}, {},{});
-            }
-            else
-            {
-                $str .= weechat::config_string( $options{"show_suffix_bufname"} );
-            }
+            $str .= weechat::color( weechat::config_color( $options{"color_suffix_bufname"} ) ).
+                    weechat::config_string( $options{"show_suffix_bufname"} ).
+                    weechat::color("default");
         }
+
         $str .= "\n";
         $old_number = $buffer->{"number"};
     }
@@ -1149,7 +1130,8 @@ return $str;
 
 sub buffers_signal_buffer
 {
-my ($data, $signal, $signal_data) = @_;
+    my ($data, $signal, $signal_data) = @_;
+
     # check for buffer_switch and set or remove detach time
     if ($weechat_version >= 0x00030800)
     {
@@ -1311,8 +1293,20 @@ sub move_buffer
   {
       # if number 2 is not known (end of gesture outside buffers list), then set it
       # according to mouse gesture
-      $number2 = "999999";
-      $number2 = "1" if (($hash{"_key"} =~ /gesture-left/) || ($hash{"_key"} =~ /gesture-up/));
+      $number2 = "1";
+      if (($hash{"_key"} =~ /gesture-right/) || ($hash{"_key"} =~ /gesture-down/))
+      {
+          $number2 = "999999";
+          if ($weechat_version >= 0x00030600)
+          {
+              my $hdata_buffer = weechat::hdata_get("buffer");
+              my $last_gui_buffer = weechat::hdata_get_list($hdata_buffer, "last_gui_buffer");
+              if ($last_gui_buffer)
+              {
+                  $number2 = weechat::hdata_integer($hdata_buffer, $last_gui_buffer, "number") + 1;
+              }
+          }
+      }
   }
   my $ptrbuf = weechat::current_buffer();
   weechat::command($hash{"pointer"}, "/buffer move ".$number2);
