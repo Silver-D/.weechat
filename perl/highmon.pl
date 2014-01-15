@@ -1,6 +1,6 @@
 #
 # highmon.pl - Highlight Monitoring for weechat 0.3.0
-# Version 2.4
+# Version 2.4 (modified)
 #
 # Add 'Highlight Monitor' buffer/bar to log all highlights in one spot
 #
