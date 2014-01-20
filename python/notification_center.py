@@ -43,5 +43,5 @@ def notify(data, buffer, date, tags, displayed, highlight, prefix, message):
 		if weechat.config_get_plugin('show_message_text') == 'on':
 			Notifier.notify(message, title='%s [private]' % prefix)
 		else:
-			Notifier.notify('From %s' % my_prefix, title='Private Message')
+			Notifier.notify('From %s' % prefix, title='Private Message')
 	return weechat.WEECHAT_RC_OK
