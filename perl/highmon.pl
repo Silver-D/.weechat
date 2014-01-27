@@ -706,7 +706,7 @@ sub highmon_new_message
 						# Strip nick colour
 						$uncolnick = weechat::string_remove_color($cb_prefix, "");
 						# Format nick
-						$nick = " ".weechat::config_get_plugin("nick_prefix").weechat::color("chat_highlight").$uncolnick.weechat::color("reset").weechat::config_get_plugin("nick_suffix");
+						$nick = " ".weechat::color("chat_nick_prefix").weechat::config_get_plugin("nick_prefix").weechat::color("chat_highlight").$uncolnick.weechat::color("chat_nick_suffix").weechat::config_get_plugin("nick_suffix").weechat::color("reset"); #silverd
 					}
 					# Topic line
 					elsif ($cb_tags =~ /irc_topic/)
@@ -720,6 +720,8 @@ sub highmon_new_message
 						$nick = weechat::color("chat_highlight").$uncolnick.weechat::color("reset");
 					}
 					# Send to output
+					$cb_msg = weechat::string_remove_color($cb_msg, ""); #silverd
+					$cb_msg = weechat::color("chat") . $cb_msg . weechat::color("reset"); #silverd
 					highmon_print ($cb_msg, $cb_bufferp, $nick);
 				}
 			}
