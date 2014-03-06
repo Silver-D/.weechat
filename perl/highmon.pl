@@ -706,7 +706,7 @@ sub highmon_new_message
 						# Strip nick colour
 						$uncolnick = weechat::string_remove_color($cb_prefix, "");
 						# Format nick
-						$nick = " ".weechat::color("chat_nick_prefix").weechat::config_get_plugin("nick_prefix").weechat::color("chat_highlight").$uncolnick.weechat::color("chat_nick_suffix").weechat::config_get_plugin("nick_suffix").weechat::color("reset"); #silverd
+						$nick = " ".weechat::color("chat_highlight").$uncolnick.weechat::color("chat_nick_suffix").weechat::config_get_plugin("nick_suffix").weechat::color("reset"); #silverd
 					}
 					# Topic line
 					elsif ($cb_tags =~ /irc_topic/)
@@ -800,7 +800,7 @@ sub highmon_print
 			$col_delim = weechat::config_string($col_delim);
 			$col_delim = weechat::color($col_delim);
 			# Place channel number in front of formatted name
-			$bufname = weechat::color("status_number").weechat::buffer_get_integer($cb_bufferp, 'number').$col_delim.":".weechat::color("reset").$bufname;
+			$bufname = weechat::color("chat_nick_prefix").weechat::config_get_plugin("nick_prefix").weechat::color("status_number").weechat::buffer_get_integer($cb_bufferp, 'number').$col_delim.":".weechat::color("reset").$bufname;
 			# Build string
 			$outstr = $bufname.$col_delim.":".$nick."\t".$cb_msg;
 			# ~ silverd
