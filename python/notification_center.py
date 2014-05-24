@@ -38,10 +38,10 @@ def notify(data, buffer, date, tags, displayed, highlight, prefix, message):
 			act_config = weechat.config_string(act_config)
 			if prefix == act_config:
 				my_prefix = message.split(' ')[0]
-			Notifier.notify('In %s by %s' % (channel, my_prefix), title='Highlighted Message')
+			Notifier.notify('In %s by %s' % (channel, my_prefix), title='Highlighted Message', sound='Ping')
 	elif weechat.config_get_plugin('show_private_message') == 'on' and 'notify_private' in tags:
 		if weechat.config_get_plugin('show_message_text') == 'on':
 			Notifier.notify(message, title='%s [private]' % prefix)
 		else:
-			Notifier.notify('From %s' % prefix, title='Private Message')
+			Notifier.notify('From %s' % prefix, title='Private Message', sound='Ping')
 	return weechat.WEECHAT_RC_OK
