@@ -1,6 +1,6 @@
-<user nick="silverd" password="ETQIyBsVDI98NkAIYqVz1A4levGb" version="1">
+<user nick="silverd" password="J59Z1f+ZGlBf1CZeD0UVOgscm4Yt" version="1">
 	<setting name="last_version">197633</setting>
-	<account protocol="discord" handle="alex.shershukov@gmail.com" password="gTL9ciN4yJYQAj7s+KCo5o1m" autoconnect="false" tag="discord">
+	<account protocol="discord" handle="alex.shershukov@gmail.com" password="JSU8IkHy70RuHTPEpzYZnpQu" autoconnect="false" tag="discord">
 		<setting name="mention_suffix">[:,]</setting>
 	</account>
 	<channel name="&amp;bitlbee" type="control">
