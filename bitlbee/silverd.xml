@@ -1,9 +1,12 @@
-<user nick="silverd" password="+W2bH+3uZkhKuQ0h3mgbjpyrDyFu" version="1">
+<user nick="silverd" password="pnVUo/AguxnJz62FCl/PQ+FQ9Mnx" version="1">
 	<setting name="last_version">197633</setting>
-	<account protocol="discord" handle="alex.shershukov@gmail.com" password="OU8pbUSmgfQ6lQqN2k5MxqCp" autoconnect="false" tag="discord">
+	<setting name="root_nick">BitlBee</setting>
+	<setting name="save_on_quit">false</setting>
+	<account protocol="discord" handle="alex.shershukov@gmail.com" password="9ypTm2U4y/YCqsIqgI0iuyP9" autoconnect="false" tag="discord">
 		<setting name="mention_suffix">[:,]</setting>
 	</account>
 	<channel name="&amp;bitlbee" type="control">
 		<setting name="auto_join">true</setting>
+		<setting name="fill_by">account</setting>
 	</channel>
 </user>
