@@ -1,9 +1,9 @@
-<user nick="silverd" password="DMXj5W2Q3uT0TOwVd3UF1wILvKYJ" version="1">
+<user nick="silverd" password="Ozxys/gvGKTzsfg4bbvGc0ZxKISH" version="1">
 	<setting name="auto_reconnect_delay">30</setting>
-	<setting name="last_version">197633</setting>
+	<setting name="last_version">197634</setting>
 	<setting name="root_nick">BitlBee</setting>
 	<setting name="save_on_quit">false</setting>
-	<account protocol="discord" handle="alex.shershukov@gmail.com" password="caBcEIwof4GFTpW2yWl7B38e" autoconnect="false" tag="discord">
+	<account protocol="discord" handle="alex.shershukov@gmail.com" password="0n8RorR78O0PNtCBCP2kmOWv" autoconnect="false" tag="discord">
 		<setting name="incoming_me_translation">false</setting>
 		<setting name="mention_suffix">[:,]</setting>
 	</account>
