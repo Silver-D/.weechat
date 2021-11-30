@@ -1,4 +1,0 @@
-.weechat
-========
-
-weechat-config
