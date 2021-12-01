@@ -1,4 +1,5 @@
 #!/bin/bash
 
-git add -A
-git commit --allow-empty-message -m ""
+git add -vA
+git commit --allow-empty-message -vm ""
+git push -v
